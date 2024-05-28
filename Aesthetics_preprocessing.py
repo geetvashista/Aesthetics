@@ -107,7 +107,7 @@ raw_renamed = raw_downsampled.rename_channels(dic)
 raw_renamed = raw_renamed.set_montage(montage)
 
 
-# ICA - FULL
+# Independent Components Analysis (ICA) for artifact removal
 
 ica = mne.preprocessing.ICA(n_components=32, random_state=0)
 ica.fit(raw_renamed)
