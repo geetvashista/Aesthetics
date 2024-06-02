@@ -1,3 +1,6 @@
+# Author: Monkey (gv.3721@hotmail.co.nz)
+# Preprocessing for Vixen
+
 import mne
 import numpy as np
 import scipy
