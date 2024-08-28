@@ -59,7 +59,7 @@ for i in range(8):
 input_data = np.array(temp_array)
 del temp_array
 
-adj_matrix = wpli_conn(data, target_fb, fs)
+adj_matrix = wpli_conn(input_data, target_fb, fs)
 
 Strength, Betweenness, Eigenvector, Clustering = graph_metrics(adj_matrix)
 
