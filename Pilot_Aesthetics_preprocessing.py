@@ -65,17 +65,15 @@ def epoch_data(clean_data, events, event_ids, tmin, tmax):
                            eeg=True,
                            stim=False,
                            eog=False,
-                           exclude='bads')
+                           )
 
     epochs = mne.Epochs(clean_data,
                         events=events,
                         event_id=event_ids,
                         tmin=tmin,
                         tmax=tmax,
-                        proj=True,
-                        picks=picks,
                         baseline=None,
-                        preload=True)
+                        picks=picks)
 
     return epochs
 
