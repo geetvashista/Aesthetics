@@ -3,16 +3,16 @@ import numpy as np
 import matplotlib
 
 # Do we want to epoch? If so, set to True.
-epoch = False
-tmin = 0    # Set as wanted if epoch is True
-tmax = 1    # Set as wanted if epoch is True
+epoch = True
+tmin = 1    # Set as wanted if epoch is True
+tmax = 60    # Set as wanted if epoch is True
 
 # Set back ends of viz
 matplotlib.use('Qt5Agg')
 
 # Set file paths
-data_file = r'C:\Users\em17531\Desktop\p01\eeg\neuroaesthetics_p01.vhdr'
-captrak_file = r'C:\Users\em17531\Desktop\p01\captrak\neuroaesthetics_p01.bvct'
+data_file = r'C:\Users\em17531\Desktop\Tamar_data\p01\eeg\neuroaesthetics_p01.vhdr'
+captrak_file = r'C:\Users\em17531\Desktop\Tamar_data\p01\captrak\neuroaesthetics_p01.bvct'
 
 def preprocessing(data_file, captrak_file):
     # load data
@@ -40,12 +40,9 @@ def preprocessing(data_file, captrak_file):
     # Interpolation of bad channels
     raw_interp = raw_avg_ref.interpolate_bads(reset_bads=False)
 
-    # downsample data from to 250 Hz
-    raw_downsampled = raw_interp.resample(250, npad="auto")
-
     # Setting up a Montage
     montage = mne.channels.read_dig_captrak(captrak_file)
-    raw_with_montage = raw_downsampled.set_montage(montage)
+    raw_with_montage = raw_interp.set_montage(montage)
 
     # Independent Components Analysis (ICA) for artifact removal
     ica = mne.preprocessing.ICA(n_components=32, random_state=0)
@@ -84,4 +81,7 @@ clean_data, events, event_ids = preprocessing(data_file=data_file, captrak_file=
 # epoch
 if epoch:
     epochs = epoch_data(clean_data, events, event_ids, tmin, tmax)
+    # downsample data from to 250 Hz
+    epochs.load_data()
+    epochs = epochs.resample(250, npad="auto")
 
