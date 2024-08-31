@@ -10,3 +10,6 @@ p02_low.save('p02_low')
 #plot stc after beamformer code
 stc_hig.plot(hemi='both')
 stc_low.plot(hemi='both')
+
+# plotting stcs LCMV (plot multiple brain images)
+mean_hig.plot(hemi='both', view_layout='horizontal', views=('lateral', 'axial', 'medial'), colorbar=False)
