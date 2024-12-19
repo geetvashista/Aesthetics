@@ -11,7 +11,7 @@ def parcellation(array, labels):
     for i in labels:
         index = labels.index(i)
         temp = str(labels[index])
-        dec[temp] = array.magnitude().in_label(i).data  # change here from buds to sham as needed
+        dec[temp] = array.magnitude().in_label(i).data 
     i = 0
     while True:
         temp = dec[str(labels[i])]
