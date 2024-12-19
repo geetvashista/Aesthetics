@@ -5,10 +5,7 @@ import os
 import dyconnmap
 
 # Parcellation of stc
-def parcellation(array):
-    labels = mne.read_labels_from_annot("fsaverage", "HCPMMP1", "both")    # TO DO: move this out of the function 
-    del labels[0]
-    del labels[0]
+def parcellation(array, labels):
 
     dec = {}
     for i in labels:
@@ -31,11 +28,16 @@ def parcellation(array):
 def prep_data(input_dir, target_fb, fs):
     data = []
     base_file_names = []
+    
+    labels = mne.read_labels_from_annot("fsaverage", "HCPMMP1", "both")
+    del labels[0]
+    del labels[0]
+    
     for file in os.listdir(input_dir):
         stc_path = os.path.join(input_dir, file)
         base_file_names.append(os.path.basename(stc_path))
         target_stc = mne.read_source_estimate(stc_path)
-        target_array = parcellation(target_stc)
+        target_array = parcellation(target_stc, labels)
         target_array = target_array[:, 10:14490]    # crop the first and last 10 time-points, likely unneeded
         _, _, target_array = dyconnmap.analytic_signal(target_array.T, fb=target_fb, fs=fs)
         data.append(target_array)
@@ -58,6 +60,7 @@ def wpli_conn(array, base_file_names, target_fb, fs, save_base):   # (participan
 start = time.time()
 saving_path = r'G:\Vixen\adj_arrays\_'
 file_path = r'G:\Vixen\raw_stc'
+
 
 Master_array, file_names = prep_data(file_path, [8, 13], 250)
 Master_adj_matrix = wpli_conn(Master_array, file_names, [8, 13], 250, saving_path)
