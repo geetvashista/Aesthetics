@@ -3,6 +3,8 @@ import time
 import mne
 import os
 import dyconnmap
+from fontTools.ttx import process
+
 
 # Parcellation of stc
 def parcellation(array, labels):
@@ -65,3 +67,46 @@ file_path = r'G:\Vixen\raw_stc'
 Master_array, file_names = prep_data(file_path, [8, 13], 250)
 Master_adj_matrix = wpli_conn(Master_array, file_names, [8, 13], 250, saving_path)
 print('\n' + "EXECUTION TIME: " + str(time.time() - start) + " sec")
+
+
+
+
+
+
+
+
+
+
+labels = mne.read_labels_from_annot("fsaverage", "HCPMMP1", "both")
+del labels[0]
+del labels[0]
+
+
+import multiprocessing
+
+def fun():
+    target_fb = [8, 13]
+    fs = 250
+
+    data = mne.read_source_estimate(r's13_stc_h2-stc.h5')
+
+    start = time.time()
+    target_array = parcellation(data, labels)
+    print('\n' + "EXECUTION TIME: " + str(time.time() - start) + " sec")
+
+    target_array = target_array[:, 10:14490]  # crop the first and last 10 time-points, likely unneeded
+    _, _, target_array = dyconnmap.analytic_signal(target_array.T, fb=target_fb, fs=fs)
+
+    start = time.time()
+    adj_matrix = dyconnmap.fc.wpli(target_array.T, fs=fs, fb=target_fb)
+    print('\n' + "EXECUTION TIME: " + str(time.time() - start) + " sec")
+
+    np.save(saving_path + 's13_stc_h2' + '_adj_matrix', adj_matrix)
+
+
+start = time.time()
+process = multiprocessing.Process(target=fun,args=('process1'))
+process.start()
+process.join()
+print('\n' + "EXECUTION TIME: " + str(time.time() - start) + " sec")
+
