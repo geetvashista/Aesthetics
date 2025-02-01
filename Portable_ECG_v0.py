@@ -29,3 +29,6 @@ plot_signal(ecg_signal[12*250:15*250])
 temp, _ = nk.ecg_process(ecg_signal, sampling_rate=250)
 data = temp['ECG_Clean']
 plot_signal(data[12*250:15*250])
+
+# Idea: the signal is still a little noisy, let just nuke it to hell with a 
+# low-pass filter at like 20Hz?
