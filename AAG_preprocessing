@@ -1,0 +1,100 @@
+import mne
+import matplotlib
+import numpy as np
+
+# Set up Matplotlib backend
+matplotlib.use('Qt5Agg')
+
+# Set up data file path
+data_file = r"C:\Users\tmcc380\OneDrive - The University of Auckland\Desktop\AAG_study\neuroaesthetics_AAG\s06\numpy\s06_baseline.npy"
+
+def AAG_preprocessing(data_file):
+
+    # Load .npy EEG data
+    data = np.load(data_file) # shape: (n_channels, n_times)
+
+    # Set background info
+    ch_names = ['Fp1', 'Fpz', 'Fp2',
+                'AF7', 'AF3', 'AFz', 'AF4', 'AF8',
+                'F9', 'F7', 'F3', 'F1', 'Fz', 'F2', 'F4', 'F8', 'F10',
+                'FT9', 'FT7', 'FC5', 'FC3', 'FC1', 'FCz', 'FC2', 'FC4', 'FC6', 'FT8', 'FT10',
+                'T9', 'T7', 'C5', 'C3', 'C1', 'Cz', 'C2', 'C4', 'C6', 'T8', 'T10',
+                'TP9', 'TP7', 'CP5', 'CP3', 'CP1', 'CPz', 'CP2', 'CP4', 'CP6', 'TP8', 'TP10',
+                'P9', 'P7', 'P3', 'P1', 'Pz', 'P2', 'P4', 'P8', 'P10',
+                'PO7', 'POz', 'PO8',
+                'O1', 'O2']
+    sfreq = 500
+    ch_types = ['eeg'] * len(ch_names)
+
+    # Create MNE info
+    info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
+    raw = mne.io.RawArray(data, info)
+    raw.load_data()
+
+    # set background info
+    raw.info['line_freq'] = 50
+
+    # Mark bad channels
+    raw.plot(block=True)
+
+    # Notch filter
+    raw_notch = raw.copy().notch_filter(np.arange(50, 250, 50)) #np.arange to remove frequencies between 50-250 in intervals of 50
+
+    # Bandpass filter
+    raw_filter = raw_notch.copy().filter(l_freq=1, h_freq=40)
+
+    # Re-reference to average
+    raw_av_ref = raw_filter.copy().set_eeg_reference(ref_channels='average')
+
+    # Set up montage
+    montage = mne.channels.make_standard_montage('GSN-HydroCel-64_1.0')
+    new_ch_names = montage.ch_names
+    old_ch_names = raw_av_ref.ch_names
+    dic = dict(zip(old_ch_names, new_ch_names))
+    raw_renamed = raw_av_ref.copy().rename_channels(dic)
+    raw_with_montage = raw_renamed.copy().set_montage(montage)
+
+    # Interpolate bad channels
+    raw_interp = raw_with_montage.copy().interpolate_bads(reset_bads=False)
+
+    # Downsample
+    raw_downsample = raw_interp.copy().resample(sfreq=250)
+
+    # Create ICA object and fit to most recent copy of raw data
+    ica = mne.preprocessing.ICA(n_components=20, random_state=0)
+    ica.fit(raw_downsample)
+    ica.plot_components()
+    ica.plot_sources(raw_downsample.pick_types(eeg=True), block=True)
+    clean_data = ica.apply(raw_downsample.copy())
+    clean_data.plot(block=True)
+
+    return clean_data
+
+clean_data = AAG_preprocessing(data_file=data_file)
+
+# Save h1,h2,l1,l2
+clean_data.save('temp.fif', overwrite=True)
+
+
+
+# Epochs
+epoch_length = 60
+
+# Create events array at regular intervals
+events = mne.make_fixed_length_events(clean_data,
+                                      start=0,
+                                      stop=None,
+                                      duration=epoch_length,
+                                      id=1)
+
+# Now create Epochs
+epochs = mne.Epochs(clean_data,
+                        events,
+                        event_id={'Dummy': 1},
+                        tmin=1,
+                        tmax=59,
+                        baseline=None,
+                        preload=True)
+
+
+epochs.save('temp_s04_h2-epo.fif', overwrite=True)
