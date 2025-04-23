@@ -1,0 +1,29 @@
+# Set up data file paths
+path = r"C:\Users\tmcc380\PycharmProjects\pilots\screen_data_files"
+captrak_path = r"C:\Users\tmcc380\PycharmProjects\pilots\captrak_files"
+output_folder = 'processed_data_files'
+os.makedirs(output_folder, exist_ok=True)
+
+# Get all files
+all_vhdr_files = glob.glob(os.path.join(path, "*.vhdr"))
+all_captrak_files = glob.glob(os.path.join(captrak_path, "*.bvct"))
+
+# Create a dictionary for fast lookup of captrak files
+captrak_dict = {os.path.splitext(os.path.basename(f))[0]: f for f in all_captrak_files}
+
+# Loop over EEG files and find corresponding CapTrak
+for vhdr_file in all_vhdr_files:
+    base_name = os.path.splitext(os.path.basename(vhdr_file))[0]
+
+    # Load EEG data
+    raw = mne.io.read_raw_brainvision(vhdr_file, preload=True)
+    raw2 = raw.copy()
+
+    # Match CapTrak file by base name
+    captrak_file = captrak_dict.get(base_name)
+    if captrak_file:
+        montage = mne.channels.read_dig_captrak(captrak_file)
+        raw.set_montage(montage)
+        raw2.set_montage(montage)
+    else:
+        print(f"⚠️ No matching CapTrak file for {vhdr_file}")
