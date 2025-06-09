@@ -66,8 +66,6 @@ def prep_data(input_dir, array_type, target_fb, fs):
 
                 target_array = np.load(os.path.join(input_dir, folder, file))
 
-                target_array = target_array[0:606000, :]
-
                 _, _, target_array = dyconnmap.analytic_signal(target_array.T, fb=target_fb, fs=fs)
 
                 data.append(target_array)
